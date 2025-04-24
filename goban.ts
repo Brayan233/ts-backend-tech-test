@@ -36,6 +36,55 @@ export class Goban {
   }
 
   public isTaken(x: number, y: number): boolean {
-    throw new Error("Not implemented");
+    const status = this.getStatus(x, y);
+    if (status === Status.EMPTY || status === Status.OUT) {
+      return false;
+    }
+
+    const shape = this.findShape(x, y, status);
+    return !this.hasFreedom(shape);
+  }
+
+  private findShape(
+    x: number,
+    y: number,
+    color: Status,
+    visited: Set<string> = new Set(),
+  ): Set<string> {
+    if (
+      this.getStatus(x, y) !== color ||
+      visited.has(`${x},${y}`)
+    ) {
+      return new Set();
+    }
+
+    visited.add(`${x},${y}`);
+
+    const neighbors = [
+      [x - 1, y],
+      [x + 1, y],
+      [x, y - 1],
+      [x, y + 1],
+    ];
+
+    neighbors.forEach(([nx, ny]) => {
+      this.findShape(nx, ny, color, visited);
+    });
+
+    return visited;
+  }
+
+  private hasFreedom(shape: Set<string>): boolean {
+    for (const stone of shape) {
+      const [x, y] = stone.split(",").map(Number);
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
+      if (neighbors.some(([nx, ny]) => this.getStatus(nx, ny) === Status.EMPTY)) return true;
+    }
+    return false;
   }
 }
